@@ -97,7 +97,7 @@ Rules, each enforced with an error that names the sample or patient:
 | Extra Parameters (JSON) | `extra_params_json` | empty |
 
 Not shown in the form and set by `process-input.json`: `outdir` (the dataset data path), `input` (the samplesheet),
-`sigprofiler_genome_dir`, `vep_revel`, `vep_revel_tbi` (all under the references bucket) and
+`sigprofiler_genome_dir`, `vep_revel`, `vep_revel_tbi` (all under `s3://btc-refdata/`) and
 `monochrome_logs`. `igenomes_base` and `vep_cache` are not set: the fork's defaults point at the public buckets
 `s3://ngi-igenomes/igenomes/` and `s3://annotation-cache/vep_cache/`. Every other pipeline parameter keeps its
 pipeline default.
@@ -125,23 +125,25 @@ through this box; the paths have to be fixed in `process-input.json`.
 ## Prerequisites (references the launch needs)
 
 The default launch reads two references from public S3 buckets (fork defaults, listed anonymously on 2026-11-16; not
-yet read from a Cirro Batch job) and two from the Cirro references bucket (`$.referencesBucketUri`). Nothing has been
-staged in the references bucket by this work. A default launch fails until the REVEL and SigProfiler items below are in
-place at the mapped paths.
+yet read from a Cirro Batch job) and two from the lab bucket `s3://btc-refdata/`, written out in full in
+`process-input.json`. The files do not use `$.referencesBucketUri`: on 2026-11-16 a launch recorded it as
+`s3://pubweb-references`, which is Cirro's own bucket, not `btc-refdata`. A default launch fails until the REVEL and
+SigProfiler items below are in place at the mapped paths, and the Batch role must be able to read `btc-refdata` (not
+tested).
 
 | What | Param | Expected folder layout | Status |
 |---|---|---|---|
 | iGenomes GRCh38 tree | `igenomes_base`, not mapped: fork default `s3://ngi-igenomes/igenomes/` | `Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta` and `Homo_sapiens/GATK/GRCh38/Annotation/ASCAT/{GC,RT}_G1000_hg38.zip`, plus the `Homo_sapiens/ClairSTO/GRCh38/Annotation/` files named in the fork's `conf/igenomes.config` (read from that file; which of them a paired run uses was not checked) | public bucket; the FASTA, `GC_G1000_hg38.zip`, `RT_G1000_hg38.zip` and four ClairSTO annotation files were listed anonymously on 2026-11-16 |
 | VEP cache 113 | `vep_cache`, not mapped: fork default `s3://annotation-cache/vep_cache/`; `vep_cache_version` = 113 (form) | `113_GRCh38/homo_sapiens/113_GRCh38/` in that bucket (`subworkflows/local/prepare_annotation.nf` adds the `<version>_<genome>/` prefix only when `vep_cache` equals exactly this URL, so do not map it to another bucket without the unprefixed `homo_sapiens/113_GRCh38/` layout; `homo_sapiens_merged` or `homo_sapiens_refseq` if `--merged` or `--refseq` is in `vep_args`) | public bucket; that folder was listed anonymously on 2026-11-16 and matches what the fork code looks for; the code was read, not run |
-| REVEL | `vep_revel` = `$.referencesBucketUri\|/vep_revel/revel_grch38.tsv.gz` and `vep_revel_tbi` = `$.referencesBucketUri\|/vep_revel/revel_grch38.tsv.gz.tbi` | two files in the `vep_revel/` folder: the prepared, bgzipped GRCh38 score file and its tabix index, named as mapped. The lab's P4 run already produced exactly this pair (made by the pipeline's prepare step from the REVEL release zip): `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/P4.LRsomatic/vep_plugins/revel_grch38.tsv.gz` (about 606 MB) and `.../vep_plugins/revel_grch38.tsv.gz.tbi`. They exist there; they were not integrity-checked | upload requested from the references-bucket admin on 2026-11-16 at these paths; not confirmed staged |
-| SigProfiler volume | `sigprofiler_genome_dir` = `$.referencesBucketUri\|/sigprofiler/volume/` | the volume directory itself, containing `tsb/GRCh38/` with 25 files | upload requested from the references-bucket admin on 2026-11-16 at this path; not confirmed staged |
+| REVEL | `vep_revel` = `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz` and `vep_revel_tbi` = `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi` | two files in the `vep_revel/` folder: the prepared, bgzipped GRCh38 score file and its tabix index, named as mapped. The lab's P4 run already produced exactly this pair (made by the pipeline's prepare step from the REVEL release zip): `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/P4.LRsomatic/vep_plugins/revel_grch38.tsv.gz` (about 606 MB) and `.../vep_plugins/revel_grch38.tsv.gz.tbi`. They exist there; they were not integrity-checked | upload to `btc-refdata` requested on 2026-11-16 at these paths and reported done; not listed or read from Batch by this work (no read access) |
+| SigProfiler volume | `sigprofiler_genome_dir` = `s3://btc-refdata/sigprofiler/volume/` | the volume directory itself, containing `tsb/GRCh38/` with 25 files | upload to `btc-refdata` requested on 2026-11-16 at this path and reported done; not listed or read from Batch by this work (no read access) |
 
-Reference-bucket paths copied exactly from `process-input.json`. They are the paths requested from the bucket admin; if
-the files end up elsewhere, change the matching param in `process-input.json`:
+Paths copied exactly from `process-input.json`. They are the paths requested from the bucket admin; if the files end up
+elsewhere, change the matching param in `process-input.json`:
 
-- `$.referencesBucketUri|/sigprofiler/volume/`
-- `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz`
-- `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi`
+- `s3://btc-refdata/sigprofiler/volume/`
+- `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz`
+- `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi`
 
 SigProfiler volume: a verified copy is at
 `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/Cirro_LRsomatic/reference/sigprofiler_volume` (about 2.9 GB;
@@ -190,10 +192,11 @@ None of the following was ever exercised:
   read from the catalogue, not run on Cirro (see "Process definition notes").
 - The `fileMappingRules` regexes were only checked against file names from the finished Slurm runs, and only with
   Python's `re`, not Cirro's regex engine.
-- The prepared-REVEL route (the `.tsv.gz` and `.tbi` staged in the references bucket and read by Nextflow over S3) was
+- The prepared-REVEL route (the `.tsv.gz` and `.tbi` staged in `btc-refdata` and read by Nextflow over S3) was
   not run on Batch, and the integrity of the P4 `revel_grch38.tsv.gz` / `.tbi` pair was not checked.
-- The Cirro references bucket was never listed and nothing was staged there. The two public buckets (iGenomes, VEP
-  cache) were listed anonymously from the lab cluster on 2026-11-16, not from a Cirro Batch job.
+- `btc-refdata` was never listed (the project credentials are denied) and its contents are only reported, not seen.
+  The two public buckets (iGenomes, VEP cache) were listed anonymously from the lab cluster on 2026-11-16, not from a
+  Cirro Batch job.
 
 ## Verification
 
@@ -262,9 +265,9 @@ What remains; nothing below has been done:
 1. Replace the `documentationUrl` anchor in `process-definition.json`; it is an invented guess.
 2. Confirm the references are staged (see "Prerequisites") at the paths in `process-input.json`, or change the paths to
    wherever they were put:
-   - `$.referencesBucketUri|/sigprofiler/volume/`
-   - `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz`
-   - `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi`
+   - `s3://btc-refdata/sigprofiler/volume/`
+   - `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz`
+   - `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi`
 3. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
    `ingest_unaligned_bam`, read from the catalogue and not run; see "Process definition notes").
 4. Set `resourceLimits` in `process-compute.config` to the real AWS Batch limits.

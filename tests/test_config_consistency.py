@@ -120,19 +120,14 @@ def test_public_references_are_left_to_fork_defaults():
     assert props["vep_cache_version"]["default"] == 113
 
 
-def test_staged_references_come_from_references_bucket():
-    mapping = load("process-input.json")
-    assert mapping["sigprofiler_genome_dir"].startswith("$.referencesBucketUri|/sigprofiler/")
-    assert mapping["vep_revel"].startswith("$.referencesBucketUri|/vep_revel/")
-    assert mapping["vep_revel_tbi"].startswith("$.referencesBucketUri|/vep_revel/")
-
-
 def test_staged_reference_paths_match_the_upload_request():
-    # These are the S3 paths requested from the references-bucket admin; change both together.
+    # The S3 paths requested from the bucket admin; change both together. They are written out in full because
+    # $.referencesBucketUri is s3://pubweb-references (Cirro's own bucket), not btc-refdata.
     mapping = load("process-input.json")
-    assert mapping["sigprofiler_genome_dir"] == "$.referencesBucketUri|/sigprofiler/volume/"
-    assert mapping["vep_revel"] == "$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz"
-    assert mapping["vep_revel_tbi"] == "$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi"
+    assert mapping["sigprofiler_genome_dir"] == "s3://btc-refdata/sigprofiler/volume/"
+    assert mapping["vep_revel"] == "s3://btc-refdata/vep_revel/revel_grch38.tsv.gz"
+    assert mapping["vep_revel_tbi"] == "s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi"
+    assert "referencesBucketUri" not in json.dumps(mapping)
     assert "TODO" not in json.dumps(mapping)
 
 
@@ -146,7 +141,7 @@ def _protected_params():
 def test_every_reference_mapped_param_is_protected():
     mapping = load("process-input.json")
     expected = {k for k, v in mapping.items()
-                if isinstance(v, str) and v.startswith("$.referencesBucketUri")} | {"outdir", "input"}
+                if isinstance(v, str) and v.startswith("s3://btc-refdata/")} | {"outdir", "input"}
     missing = expected - _protected_params()
     assert not missing, f"mapped but not protected from extra_params_json: {sorted(missing)}"
 

@@ -51,8 +51,8 @@ def test_output_json_is_empty_commands():
 def test_readme_lists_every_staged_reference_path():
     text = readme()
     paths = [v for v in load("process-input.json").values()
-             if isinstance(v, str) and v.startswith("$.referencesBucketUri")]
-    assert paths, "process-input.json maps no references-bucket path"
+             if isinstance(v, str) and v.startswith("s3://btc-refdata/")]
+    assert paths, "process-input.json maps no btc-refdata path"
     for path in paths:
         assert path in text, f"README does not list {path}"
 

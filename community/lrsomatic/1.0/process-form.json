@@ -102,7 +102,7 @@
           "vep_cache_version": {
             "type": "integer",
             "title": "VEP cache version",
-            "description": "Version of the VEP cache to use. Must match the cache in the references bucket.",
+            "description": "Version of the VEP cache to use. Must be a GRCh38 version available in the public annotation-cache bucket.",
             "default": 113
           }
         }
