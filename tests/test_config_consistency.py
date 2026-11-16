@@ -127,10 +127,13 @@ def test_staged_references_come_from_references_bucket():
     assert mapping["vep_revel_tbi"].startswith("$.referencesBucketUri|/vep_revel/")
 
 
-def test_placeholder_paths_contain_todo():
+def test_staged_reference_paths_match_the_upload_request():
+    # These are the S3 paths requested from the references-bucket admin; change both together.
     mapping = load("process-input.json")
-    assert "TODO" in mapping["sigprofiler_genome_dir"]
-    assert "TODO" in mapping["vep_revel"]
+    assert mapping["sigprofiler_genome_dir"] == "$.referencesBucketUri|/sigprofiler/volume/"
+    assert mapping["vep_revel"] == "$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz"
+    assert mapping["vep_revel_tbi"] == "$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi"
+    assert "TODO" not in json.dumps(mapping)
 
 
 def _protected_params():

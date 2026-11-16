@@ -119,7 +119,7 @@ A JSON object, applied in `preprocess.py` after the form values, so its keys ove
 - Rejected: text that is not valid JSON, or valid JSON that is not an object.
 - Blank means no extra parameters.
 
-Because the reference paths are protected, a user cannot work around a wrong path in the `TODO` placeholders below
+Because the reference paths are protected, a user cannot work around a wrong reference path below
 through this box; the paths have to be fixed in `process-input.json`.
 
 ## Prerequisites (references the launch needs)
@@ -133,15 +133,15 @@ place at the mapped paths.
 |---|---|---|---|
 | iGenomes GRCh38 tree | `igenomes_base`, not mapped: fork default `s3://ngi-igenomes/igenomes/` | `Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta` and `Homo_sapiens/GATK/GRCh38/Annotation/ASCAT/{GC,RT}_G1000_hg38.zip`, plus the `Homo_sapiens/ClairSTO/GRCh38/Annotation/` files named in the fork's `conf/igenomes.config` (read from that file; which of them a paired run uses was not checked) | public bucket; the FASTA, `GC_G1000_hg38.zip`, `RT_G1000_hg38.zip` and four ClairSTO annotation files were listed anonymously on 2026-11-16 |
 | VEP cache 113 | `vep_cache`, not mapped: fork default `s3://annotation-cache/vep_cache/`; `vep_cache_version` = 113 (form) | `113_GRCh38/homo_sapiens/113_GRCh38/` in that bucket (`subworkflows/local/prepare_annotation.nf` adds the `<version>_<genome>/` prefix only when `vep_cache` equals exactly this URL, so do not map it to another bucket without the unprefixed `homo_sapiens/113_GRCh38/` layout; `homo_sapiens_merged` or `homo_sapiens_refseq` if `--merged` or `--refseq` is in `vep_args`) | public bucket; that folder was listed anonymously on 2026-11-16 and matches what the fork code looks for; the code was read, not run |
-| REVEL | `vep_revel` = `$.referencesBucketUri\|/vep_revel/TODO_stage_revel_grch38.tsv.gz` and `vep_revel_tbi` = `$.referencesBucketUri\|/vep_revel/TODO_stage_revel_grch38.tsv.gz.tbi` | two files in the `vep_revel/` folder: the prepared, bgzipped GRCh38 score file and its tabix index, named as mapped. The lab's P4 run already produced exactly this pair (made by the pipeline's prepare step from the REVEL release zip): `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/P4.LRsomatic/vep_plugins/revel_grch38.tsv.gz` (about 606 MB) and `.../vep_plugins/revel_grch38.tsv.gz.tbi`. They exist there; they were not integrity-checked | not staged; paths are `TODO` placeholders |
-| SigProfiler volume | `sigprofiler_genome_dir` = `$.referencesBucketUri\|/sigprofiler/TODO_confirm_path/` | the volume directory itself, containing `tsb/GRCh38/` with 25 files | not staged; path is a `TODO` placeholder |
+| REVEL | `vep_revel` = `$.referencesBucketUri\|/vep_revel/revel_grch38.tsv.gz` and `vep_revel_tbi` = `$.referencesBucketUri\|/vep_revel/revel_grch38.tsv.gz.tbi` | two files in the `vep_revel/` folder: the prepared, bgzipped GRCh38 score file and its tabix index, named as mapped. The lab's P4 run already produced exactly this pair (made by the pipeline's prepare step from the REVEL release zip): `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/P4.LRsomatic/vep_plugins/revel_grch38.tsv.gz` (about 606 MB) and `.../vep_plugins/revel_grch38.tsv.gz.tbi`. They exist there; they were not integrity-checked | upload requested from the references-bucket admin on 2026-11-16 at these paths; not confirmed staged |
+| SigProfiler volume | `sigprofiler_genome_dir` = `$.referencesBucketUri\|/sigprofiler/volume/` | the volume directory itself, containing `tsb/GRCh38/` with 25 files | upload requested from the references-bucket admin on 2026-11-16 at this path; not confirmed staged |
 
-`TODO` paths copied exactly from `process-input.json` (replace the `TODO` part and the matching param in
-`process-input.json` once the real location is decided):
+Reference-bucket paths copied exactly from `process-input.json`. They are the paths requested from the bucket admin; if
+the files end up elsewhere, change the matching param in `process-input.json`:
 
-- `$.referencesBucketUri|/sigprofiler/TODO_confirm_path/`
-- `$.referencesBucketUri|/vep_revel/TODO_stage_revel_grch38.tsv.gz`
-- `$.referencesBucketUri|/vep_revel/TODO_stage_revel_grch38.tsv.gz.tbi`
+- `$.referencesBucketUri|/sigprofiler/volume/`
+- `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz`
+- `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi`
 
 SigProfiler volume: a verified copy is at
 `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/Cirro_LRsomatic/reference/sigprofiler_volume` (about 2.9 GB;
@@ -149,7 +149,7 @@ SigProfiler volume: a verified copy is at
 current GRCh38 registry, and SigProfilerMatrixGenerator then ran on them with exit 0 (SBS96 total 15528 of 15528 input
 SNVs, with the Singularity image). `--sigprofiler_genome_dir` skips only the pipeline's own assertion; the tool
 re-checks against its registry, so the volume works only with the corrected container (the third fork commit). The
-location is an assumption, hence the `TODO`.
+location in the bucket is the one requested, not a confirmed one.
 
 REVEL: the fork sends any `vep_revel` value containing `://` (so an `s3://` URI too) to `wget` (`subworkflows/local/prepare_vep_plugins.nf`), which cannot read S3, so the REVEL release zip cannot be used from the references bucket. The prepared `.tsv.gz` plus its `.tbi` avoids that: the fork treats a `.gz` as already prepared and requires the index, and Nextflow stages S3 paths natively. Not run on Batch. REVEL is free for non-commercial use only.
 
@@ -250,18 +250,20 @@ Invalid samplesheet input:
 
 ## Before registering this process
 
-What remains for you; nothing below has been done:
+Already done: the fork (branch `cirro`, commit `42458112ee927a37c1879a3f23e0fb82ab7b8fdb`) is pushed to the public
+GitHub repository `yannvrb/lrsomatic` (the `code.uri` in `process-definition.json`), and this config repo is pushed to
+`yannvrb/cirro-lrsomatic`. In a local clone of the fork, `origin` may still point at upstream
+IntGenomicsLab/lrsomatic; do not push there.
 
-1. Create the public GitHub repository `yannvrb/lrsomatic` (the `code.uri` in `process-definition.json`).
-2. Push the fork (branch `cirro`, commit `42458112ee927a37c1879a3f23e0fb82ab7b8fdb`) and this config repo. Nothing is
-   pushed. The fork's `origin` still points at upstream IntGenomicsLab/lrsomatic (do not push there); this config repo
-   has no remote.
-3. Replace the `documentationUrl` anchor in `process-definition.json`; it is an invented guess.
-4. Stage the references (see "Prerequisites") and replace every `TODO` path in `process-input.json`:
-   - `$.referencesBucketUri|/sigprofiler/TODO_confirm_path/`
-   - `$.referencesBucketUri|/vep_revel/TODO_stage_revel_grch38.tsv.gz`
-   - `$.referencesBucketUri|/vep_revel/TODO_stage_revel_grch38.tsv.gz.tbi`
-5. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
+What remains; nothing below has been done:
+
+1. Replace the `documentationUrl` anchor in `process-definition.json`; it is an invented guess.
+2. Confirm the references are staged (see "Prerequisites") at the paths in `process-input.json`, or change the paths to
+   wherever they were put:
+   - `$.referencesBucketUri|/sigprofiler/volume/`
+   - `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz`
+   - `$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi`
+3. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
    `ingest_unaligned_bam`, read from the catalogue and not run; see "Process definition notes").
-6. Set `resourceLimits` in `process-compute.config` to the real AWS Batch limits.
-7. Decide whether to keep `PW_ONDEMAND_JOB_QUEUE` for `MINIMAP2_ALIGN` and `LONGPHASE_HAPLOTAG`.
+4. Set `resourceLimits` in `process-compute.config` to the real AWS Batch limits.
+5. Decide whether to keep `PW_ONDEMAND_JOB_QUEUE` for `MINIMAP2_ALIGN` and `LONGPHASE_HAPLOTAG`.

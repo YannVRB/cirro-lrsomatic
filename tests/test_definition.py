@@ -21,16 +21,6 @@ def version_tuple(text):
     return tuple(int(part) for part in text.split("."))
 
 
-def todo_values(node):
-    if isinstance(node, str):
-        return [node] if "TODO" in node else []
-    if isinstance(node, dict):
-        return [v for child in node.values() for v in todo_values(child)]
-    if isinstance(node, list):
-        return [v for child in node for v in todo_values(child)]
-    return []
-
-
 def test_code_pins_fork():
     code = load("process-definition.json")["code"]
     assert code["uri"] == "yannvrb/lrsomatic"
@@ -58,10 +48,11 @@ def test_output_json_is_empty_commands():
     assert load("process-output.json") == {"commands": []}
 
 
-def test_readme_lists_every_todo_path():
+def test_readme_lists_every_staged_reference_path():
     text = readme()
-    paths = todo_values(load("process-input.json"))
-    assert paths, "process-input.json has no TODO path"
+    paths = [v for v in load("process-input.json").values()
+             if isinstance(v, str) and v.startswith("$.referencesBucketUri")]
+    assert paths, "process-input.json maps no references-bucket path"
     for path in paths:
         assert path in text, f"README does not list {path}"
 
@@ -77,4 +68,3 @@ def test_vep_revel_is_prepared_gz_with_matching_tbi():
     revel = mapping["vep_revel"]
     assert revel.lower().endswith(".tsv.gz")
     assert mapping.get("vep_revel_tbi") == revel + ".tbi"
-    assert "TODO" in revel and "TODO" in mapping["vep_revel_tbi"]

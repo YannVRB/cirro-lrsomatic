@@ -15,8 +15,8 @@
   "vep_cache_version": "$.dataset.params.annotation.vep_cache_version",
   "outdir": "$.dataset.dataPath",
   "input": "$.dataset.s3|/config/pipeline_samplesheet.csv",
-  "sigprofiler_genome_dir": "$.referencesBucketUri|/sigprofiler/TODO_confirm_path/",
-  "vep_revel": "$.referencesBucketUri|/vep_revel/TODO_stage_revel_grch38.tsv.gz",
-  "vep_revel_tbi": "$.referencesBucketUri|/vep_revel/TODO_stage_revel_grch38.tsv.gz.tbi",
+  "sigprofiler_genome_dir": "$.referencesBucketUri|/sigprofiler/volume/",
+  "vep_revel": "$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz",
+  "vep_revel_tbi": "$.referencesBucketUri|/vep_revel/revel_grch38.tsv.gz.tbi",
   "monochrome_logs": true
 }
