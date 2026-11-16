@@ -108,11 +108,23 @@ def test_input_path_is_config_pipeline_samplesheet():
     assert mapping["outdir"] == "$.dataset.dataPath"
 
 
-def test_reference_params_come_from_references_bucket():
+def test_public_references_are_left_to_fork_defaults():
+    # iGenomes and the VEP cache are read from public S3 buckets, so they are not mapped. The fork's
+    # defaults are pinned here so a fork change cannot silently point them somewhere else.
     mapping = load("process-input.json")
-    assert mapping["igenomes_base"] == "$.referencesBucketUri|/igenomes/"
-    assert mapping["vep_cache"] == "$.referencesBucketUri|/vep_cache/"
+    assert "igenomes_base" not in mapping
+    assert "vep_cache" not in mapping
+    props = fork_schema_properties()
+    assert props["igenomes_base"]["default"] == "s3://ngi-igenomes/igenomes/"
+    assert props["vep_cache"]["default"] == "s3://annotation-cache/vep_cache/"
+    assert props["vep_cache_version"]["default"] == 113
+
+
+def test_staged_references_come_from_references_bucket():
+    mapping = load("process-input.json")
     assert mapping["sigprofiler_genome_dir"].startswith("$.referencesBucketUri|/sigprofiler/")
+    assert mapping["vep_revel"].startswith("$.referencesBucketUri|/vep_revel/")
+    assert mapping["vep_revel_tbi"].startswith("$.referencesBucketUri|/vep_revel/")
 
 
 def test_placeholder_paths_contain_todo():

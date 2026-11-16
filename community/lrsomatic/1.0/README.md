@@ -97,8 +97,10 @@ Rules, each enforced with an error that names the sample or patient:
 | Extra Parameters (JSON) | `extra_params_json` | empty |
 
 Not shown in the form and set by `process-input.json`: `outdir` (the dataset data path), `input` (the samplesheet),
-`igenomes_base`, `vep_cache`, `sigprofiler_genome_dir`, `vep_revel`, `vep_revel_tbi` (all under the references bucket) and
-`monochrome_logs`. Every other pipeline parameter keeps its pipeline default.
+`sigprofiler_genome_dir`, `vep_revel`, `vep_revel_tbi` (all under the references bucket) and
+`monochrome_logs`. `igenomes_base` and `vep_cache` are not set: the fork's defaults point at the public buckets
+`s3://ngi-igenomes/igenomes/` and `s3://annotation-cache/vep_cache/`. Every other pipeline parameter keeps its
+pipeline default.
 
 ### `extra_params_json`
 
@@ -107,7 +109,8 @@ A JSON object, applied in `preprocess.py` after the form values, so its keys ove
 - Rejected (error, not a warning): the protected keys `input`, `outdir`, `igenomes_base`, `vep_cache`,
   `sigprofiler_genome_dir`, `vep_revel`, `vep_revel_tbi`, `monochrome_logs`, `custom_config_base`,
   `custom_config_version`, `validate_params`, `igenomes_ignore`, `genome`, `download_vep_cache` and
-  `download_sigprofiler_genome`. The first group is what `process-input.json` sets; `custom_config_base` and
+  `download_sigprofiler_genome`. The first group is what `process-input.json` sets, plus `igenomes_base` and
+  `vep_cache`, which stay at the fork's public defaults; `custom_config_base` and
   `custom_config_version` would pull a remote config; `validate_params` and `igenomes_ignore` switch off checks or the
   references tree; `genome` is set only by the form's Reference Genome field (GRCh38 in v1); the two `download_*` keys
   would fetch references that are staged instead. There is no allow-list: any other key is passed on.
@@ -121,13 +124,15 @@ through this box; the paths have to be fixed in `process-input.json`.
 
 ## Prerequisites (references the launch needs)
 
-The default launch reads references from the Cirro references bucket (`$.referencesBucketUri`). Nothing has been staged
-there by this work. A default launch fails until each item below is in place at the mapped path.
+The default launch reads two references from public S3 buckets (fork defaults, listed anonymously on 2026-11-16; not
+yet read from a Cirro Batch job) and two from the Cirro references bucket (`$.referencesBucketUri`). Nothing has been
+staged in the references bucket by this work. A default launch fails until the REVEL and SigProfiler items below are in
+place at the mapped paths.
 
 | What | Param | Expected folder layout | Status |
 |---|---|---|---|
-| iGenomes GRCh38 tree | `igenomes_base` = `$.referencesBucketUri\|/igenomes/` | `Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta` and `Homo_sapiens/GATK/GRCh38/Annotation/ASCAT/{GC,RT}_G1000_hg38.zip`, plus the `Homo_sapiens/ClairSTO/GRCh38/Annotation/` files named in the fork's `conf/igenomes.config` (read from that file; which of them a paired run uses was not checked) | not staged; not verified that the bucket holds it |
-| VEP cache 113 | `vep_cache` = `$.referencesBucketUri\|/vep_cache/`, `vep_cache_version` = 113 | `homo_sapiens/113_GRCh38/` directly under the mapped folder (the fork looks for `<vep_species>/<vep_cache_version>_<vep_genome>`; `homo_sapiens_merged` or `homo_sapiens_refseq` if `--merged` or `--refseq` is in `vep_args`) | not staged |
+| iGenomes GRCh38 tree | `igenomes_base`, not mapped: fork default `s3://ngi-igenomes/igenomes/` | `Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta` and `Homo_sapiens/GATK/GRCh38/Annotation/ASCAT/{GC,RT}_G1000_hg38.zip`, plus the `Homo_sapiens/ClairSTO/GRCh38/Annotation/` files named in the fork's `conf/igenomes.config` (read from that file; which of them a paired run uses was not checked) | public bucket; the FASTA, `GC_G1000_hg38.zip`, `RT_G1000_hg38.zip` and four ClairSTO annotation files were listed anonymously on 2026-11-16 |
+| VEP cache 113 | `vep_cache`, not mapped: fork default `s3://annotation-cache/vep_cache/`; `vep_cache_version` = 113 (form) | `113_GRCh38/homo_sapiens/113_GRCh38/` in that bucket (`subworkflows/local/prepare_annotation.nf` adds the `<version>_<genome>/` prefix only when `vep_cache` equals exactly this URL, so do not map it to another bucket without the unprefixed `homo_sapiens/113_GRCh38/` layout; `homo_sapiens_merged` or `homo_sapiens_refseq` if `--merged` or `--refseq` is in `vep_args`) | public bucket; that folder was listed anonymously on 2026-11-16 and matches what the fork code looks for; the code was read, not run |
 | REVEL | `vep_revel` = `$.referencesBucketUri\|/vep_revel/TODO_stage_revel_grch38.tsv.gz` and `vep_revel_tbi` = `$.referencesBucketUri\|/vep_revel/TODO_stage_revel_grch38.tsv.gz.tbi` | two files in the `vep_revel/` folder: the prepared, bgzipped GRCh38 score file and its tabix index, named as mapped. The lab's P4 run already produced exactly this pair (made by the pipeline's prepare step from the REVEL release zip): `/net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/P4.LRsomatic/vep_plugins/revel_grch38.tsv.gz` (about 606 MB) and `.../vep_plugins/revel_grch38.tsv.gz.tbi`. They exist there; they were not integrity-checked | not staged; paths are `TODO` placeholders |
 | SigProfiler volume | `sigprofiler_genome_dir` = `$.referencesBucketUri\|/sigprofiler/TODO_confirm_path/` | the volume directory itself, containing `tsb/GRCh38/` with 25 files | not staged; path is a `TODO` placeholder |
 
@@ -187,8 +192,8 @@ None of the following was ever exercised:
   Python's `re`, not Cirro's regex engine.
 - The prepared-REVEL route (the `.tsv.gz` and `.tbi` staged in the references bucket and read by Nextflow over S3) was
   not run on Batch, and the integrity of the P4 `revel_grch38.tsv.gz` / `.tbi` pair was not checked.
-- The contents and layout of the references bucket (igenomes tree, VEP cache) were never checked; nothing was listed
-  or staged there.
+- The Cirro references bucket was never listed and nothing was staged there. The two public buckets (iGenomes, VEP
+  cache) were listed anonymously from the lab cluster on 2026-11-16, not from a Cirro Batch job.
 
 ## Verification
 
