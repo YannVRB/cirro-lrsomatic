@@ -253,7 +253,9 @@ Invalid samplesheet input:
 Already done: the fork (branch `cirro`, commit `42458112ee927a37c1879a3f23e0fb82ab7b8fdb`) is pushed to the public
 GitHub repository `yannvrb/lrsomatic` (the `code.uri` in `process-definition.json`), and this config repo is pushed to
 `yannvrb/cirro-lrsomatic`. In a local clone of the fork, `origin` may still point at upstream
-IntGenomicsLab/lrsomatic; do not push there.
+IntGenomicsLab/lrsomatic; do not push there. The process was registered on 2026-11-16 in one Cirro dev project (not
+tenant-wide) with `docs/registration/register_lrsomatic.py` (dry run by default; `--create` registers and syncs). The
+sync succeeded; no launch has been tried.
 
 What remains; nothing below has been done:
 
