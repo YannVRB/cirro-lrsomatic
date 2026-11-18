@@ -12,7 +12,7 @@ real Slurm runs justify.
 | `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | **Assumed.** These are the sarek values; the largest AWS Batch instance of the user's compute environment is not known. Replace them with the real limits. |
 | `SAVANA_RUN` memory | `220.GB * task.attempt` | Peak RSS 175.4 GB observed vs 72 GB from `process_high`. |
 | `SEVERUS` memory | `96.GB * task.attempt` | Peak RSS 75.4 GB observed vs 36 GB from `process_medium`. |
-| `MINIMAP2_ALIGN`, `LONGPHASE_HAPLOTAG` queue | `env('PW_ONDEMAND_JOB_QUEUE')` | Tasks above 4 h in the traces; run on-demand so a spot interruption does not discard hours of work. The variable is Cirro-specific, copied from the sarek config, and **not verified for this pipeline**. |
+| every task: queue | `env('PW_ONDEMAND_JOB_QUEUE')` | The first full-size P4 run (2026-11-17) lost 18 hosts on the default queue ("Host EC2 ... terminated"), restarting multi-hour tasks that each stage a 180 GB BAM; only `MINIMAP2_ALIGN` was on-demand and was not interrupted. The variable is Cirro-specific, copied from the sarek config; the run log does not print the queue name, so that it resolves is inferred, not read. |
 
 There is no `params {}` block (the pipeline requires parameters on the command line, never via
 `-c`) and no Slurm or Singularity settings (Cirro supplies the AWS Batch ones).
@@ -79,9 +79,8 @@ defaults: no process reached 75 % of its allocated time.
 - `LONGPHASE_PHASE_SOMATIC` used 94 % of its 36 GB (33.7 GB) and `LONGPHASE_PHASE_GERMLINE` 77 %.
   Not overridden because the peak did not exceed the allocation; a larger tumour may need the
   first retry.
-- `LONGPHASE_HAPLOTAG` reached 67 % of its 8 h (5.35 h), below the 75 % threshold; it is routed
-  to on-demand because it ran longer than 4 h.
-- `MINIMAP2_ALIGN` (up to 4.24 h) is also routed to on-demand.
+- `LONGPHASE_HAPLOTAG` reached 67 % of its 8 h (5.35 h), below the 75 % threshold.
+- `MINIMAP2_ALIGN` ran up to 4.24 h on Slurm. All tasks now use the on-demand queue (see the table above).
 
 ### No evidence (left at pipeline defaults)
 

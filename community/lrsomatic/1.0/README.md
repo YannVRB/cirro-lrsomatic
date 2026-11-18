@@ -163,7 +163,7 @@ REVEL: the fork sends any `vep_revel` value containing `://` (so an `s3://` URI 
 | `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | **Assumed.** These are the sarek values; the largest AWS Batch instance of the user's compute environment is not known. Replace them with the real limits. |
 | `SAVANA_RUN` memory | `220.GB * task.attempt` | Peak RSS 175.4 GB observed vs 72 GB from `process_high`. |
 | `SEVERUS` memory | `96.GB * task.attempt` | Peak RSS 75.4 GB observed vs 36 GB from `process_medium`. |
-| `MINIMAP2_ALIGN`, `LONGPHASE_HAPLOTAG` queue | `env('PW_ONDEMAND_JOB_QUEUE')` | Tasks above 4 h in the traces; run on-demand so a spot interruption does not discard hours of work. The variable is Cirro-specific, copied from the sarek config, and **not verified for this pipeline**. |
+| every task: queue | `env('PW_ONDEMAND_JOB_QUEUE')` | The first full-size P4 run (2026-11-17) lost 18 hosts on the default queue ("Host EC2 ... terminated"), restarting multi-hour tasks that each stage a 180 GB BAM; only `MINIMAP2_ALIGN` was on-demand and was not interrupted. The variable is Cirro-specific, copied from the sarek config; the run log does not print the queue name, so that it resolves is inferred, not read. |
 
 There is no `params {}` block (the pipeline requires parameters on the command line, never via
 `-c`) and no Slurm or Singularity settings (Cirro supplies the AWS Batch ones).
@@ -177,7 +177,7 @@ with no evidence are in `docs/compute-sizing.md` of the repository this folder l
 None of the following was ever exercised:
 
 - Cirro itself: registering this process, the form, the `preprocess.py` hook and the output rules were not tried.
-- AWS Batch: no run on Batch, so the assumed `resourceLimits` and `PW_ONDEMAND_JOB_QUEUE` (see "Compute") are untested.
+- AWS Batch: no run on Batch, so the assumed `resourceLimits` are untested; Batch ran a full-size P4 run once and it failed on lost Spot hosts, not on memory (see "Compute").
 - Spot-reclaim behaviour on Cirro/AWS Batch: whether a reclaimed task reaches Nextflow as an unknown exit status
   (`Integer.MAX_VALUE`, which the retry predicate now covers), as one of the listed exit codes, or in another way, was
   not observed. `aws.batch.maxSpotAttempts` is not set.
@@ -271,4 +271,4 @@ What remains; nothing below has been done:
 3. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
    `ingest_unaligned_bam`, read from the catalogue and not run; see "Process definition notes").
 4. Set `resourceLimits` in `process-compute.config` to the real AWS Batch limits.
-5. Decide whether to keep `PW_ONDEMAND_JOB_QUEUE` for `MINIMAP2_ALIGN` and `LONGPHASE_HAPLOTAG`.
+5. Check that `PW_ONDEMAND_JOB_QUEUE` resolves to Cirro's on-demand queue (every task uses it).
