@@ -163,7 +163,7 @@ REVEL: the fork sends any `vep_revel` value containing `://` (so an `s3://` URI 
 | `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | **Assumed.** These are the sarek values; the largest AWS Batch instance of the user's compute environment is not known. Replace them with the real limits. |
 | `SAVANA_RUN` memory | `220.GB * task.attempt` | Peak RSS 175.4 GB observed vs 72 GB from `process_high`. |
 | `SEVERUS` memory | `96.GB * task.attempt` | Peak RSS 75.4 GB observed vs 36 GB from `process_medium`. |
-| every task: queue | `env('PW_ONDEMAND_JOB_QUEUE')` | The first full-size P4 run (2026-11-17) lost 18 hosts on the default queue ("Host EC2 ... terminated"), restarting multi-hour tasks that each stage a 180 GB BAM; only `MINIMAP2_ALIGN` was on-demand and was not interrupted. The variable is Cirro-specific, copied from the sarek config; the run log does not print the queue name, so that it resolves is inferred, not read. |
+| every task: queue | `env('PW_ONDEMAND_JOB_QUEUE')` | The first full-size P4 run (2026-11-17) lost 18 hosts on the default queue ("Host EC2 ... terminated"), restarting multi-hour tasks that each stage a 180 GB BAM; only `MINIMAP2_ALIGN` was on-demand and was not interrupted. The variable is Cirro-specific, copied from the sarek config. A plain process-level `queue = ...` was ignored in run c6012ed5 (all 36 re-run tasks ran on `Cirro-Spot-d29bb6ed`; the `queue` column of `artifacts/trace.txt` shows it), so the queue is set in a `withName: '.*'` block. That this block wins is not yet confirmed by a run. |
 
 There is no `params {}` block (the pipeline requires parameters on the command line, never via
 `-c`) and no Slurm or Singularity settings (Cirro supplies the AWS Batch ones).
@@ -271,4 +271,4 @@ What remains; nothing below has been done:
 3. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
    `ingest_unaligned_bam`, read from the catalogue and not run; see "Process definition notes").
 4. Set `resourceLimits` in `process-compute.config` to the real AWS Batch limits.
-5. Check that `PW_ONDEMAND_JOB_QUEUE` resolves to Cirro's on-demand queue (every task uses it).
+5. Check in the `queue` column of `artifacts/trace.txt` that every task runs on `Cirro-OnDemand-*` (the `withName: '.*'` queue block is untested in a run).

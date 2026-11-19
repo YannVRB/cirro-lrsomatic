@@ -54,7 +54,9 @@ def test_error_strategy_also_retries_unknown_exit_status():
 
 
 def test_every_task_uses_the_on_demand_queue():
-    # Spot hosts were lost 18 times in the first full-size run; the queue is set for the whole process scope.
+    # Spot hosts were lost 18 times in the first full-size run. A plain process-level `queue` was ignored by
+    # Cirro (run c6012ed5), so the queue is set in a withName: '.*' block that covers every task.
     code = config_code()
-    assert re.search(r"^    queue\s*=\s*env\('PW_ONDEMAND_JOB_QUEUE'\)", code, flags=re.M)
+    assert re.search(r"withName:\s*'\.\*'\s*\{\s*queue\s*=\s*env\('PW_ONDEMAND_JOB_QUEUE'\)\s*\}", code)
+    assert not re.search(r"^    queue\s*=", code, flags=re.M)
     assert not re.search(r"withName:[^{]*MINIMAP2_ALIGN", code)

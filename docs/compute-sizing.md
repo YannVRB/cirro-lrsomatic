@@ -12,7 +12,7 @@ real Slurm runs justify.
 | `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | **Assumed.** These are the sarek values; the largest AWS Batch instance of the user's compute environment is not known. Replace them with the real limits. |
 | `SAVANA_RUN` memory | `220.GB * task.attempt` | Peak RSS 175.4 GB observed vs 72 GB from `process_high`. |
 | `SEVERUS` memory | `96.GB * task.attempt` | Peak RSS 75.4 GB observed vs 36 GB from `process_medium`. |
-| every task: queue | `env('PW_ONDEMAND_JOB_QUEUE')` | The first full-size P4 run (2026-11-17) lost 18 hosts on the default queue ("Host EC2 ... terminated"), restarting multi-hour tasks that each stage a 180 GB BAM; only `MINIMAP2_ALIGN` was on-demand and was not interrupted. The variable is Cirro-specific, copied from the sarek config; the run log does not print the queue name, so that it resolves is inferred, not read. |
+| every task: queue | `env('PW_ONDEMAND_JOB_QUEUE')` | The first full-size P4 run (2026-11-17) lost 18 hosts on the default queue ("Host EC2 ... terminated"), restarting multi-hour tasks that each stage a 180 GB BAM; only `MINIMAP2_ALIGN` was on-demand and was not interrupted. The variable is Cirro-specific, copied from the sarek config. A plain process-level `queue = ...` was ignored in run c6012ed5 (all 36 re-run tasks ran on `Cirro-Spot-d29bb6ed`; the `queue` column of `artifacts/trace.txt` shows it), so the queue is set in a `withName: '.*'` block. That this block wins is not yet confirmed by a run. |
 
 There is no `params {}` block (the pipeline requires parameters on the command line, never via
 `-c`) and no Slurm or Singularity settings (Cirro supplies the AWS Batch ones).
