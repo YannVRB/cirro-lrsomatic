@@ -60,3 +60,13 @@ def test_every_task_uses_the_on_demand_queue():
     assert re.search(r"withName:\s*'\.\*'\s*\{\s*queue\s*=\s*env\('PW_ONDEMAND_JOB_QUEUE'\)\s*\}", code)
     assert not re.search(r"^    queue\s*=", code, flags=re.M)
     assert not re.search(r"withName:[^{]*MINIMAP2_ALIGN", code)
+
+
+def test_retry_scaling_depends_on_the_previous_exit_not_just_the_attempt():
+    # A lost host must not enlarge the request (run c6012ed5: CLAIR3 reached 64 cpus / 432 GB after Spot losses).
+    code = config_code()
+    assert "task.previousTrace" in code and "ext.retryScale" in code
+    assert not re.search(r"\*\s*task\.attempt", code), "resources must scale with task.ext.retryScale, not task.attempt"
+    for label in ("process_single", "process_low", "process_medium", "process_high", "process_very_high",
+                  "process_long", "process_short"):
+        assert re.search(rf"withLabel:\s*'{label}'", code), f"{label} is not declared"
