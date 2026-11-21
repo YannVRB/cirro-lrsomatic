@@ -160,7 +160,7 @@ REVEL: the fork sends any `vep_revel` value containing `://` (so an `s3://` URI 
 | Setting | Value | Why |
 |---|---|---|
 | `errorStrategy` / `maxRetries` | pipeline predicate plus unknown exit status (retry on exit 130-145, 104, 175-177 or `Integer.MAX_VALUE`, else `finish`) / 2 | The pipeline's predicate from the fork's `conf/base.config` is kept exactly and one condition is added, `task.exitStatus == Integer.MAX_VALUE` (Nextflow's value when no exit code was recorded). A spot reclaim on AWS Batch MAY surface that way instead of as a container exit code; that is unverified (nothing ran on Batch). Real non-zero exit codes outside the list are still not rerun. `maxRetries` is raised from the pipeline's 1 to 2 (three attempts), which also bounds retries of an unknown exit status. `aws.batch.maxSpotAttempts` is not set because its behaviour on Cirro cannot be verified. Overridden memory scales with `task.attempt`: `SAVANA_RUN` 220 / 440 / 488 GB (third attempt capped by `resourceLimits`), `SEVERUS` 96 / 192 / 288 GB. |
-| `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | **Assumed.** These are the sarek values; the largest AWS Batch instance of the user's compute environment is not known. Replace them with the real limits. |
+| `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | Sarek's values, checked against the on-demand compute environment's instance families on 2026-11-21 (see `docs/compute-sizing.md`): the largest memory-heavy sizes (768 to 1024 GiB) can hold 64 cpus and 488 GiB. Not verified: the environment's Max vCPUs and the instance sizes for this account. |
 | retry scaling | `ext.retryScale`: `task.attempt` if the previous attempt exited 130-145, 104 or 175-177, else 1; multiplies cpus, memory and time of the 7 labels the workflow uses | `conf/base.config` multiplies by `task.attempt` on every retry, so a lost host (exit unknown) also asked for a bigger instance: in run c6012ed5 CLAIR3 went 24 -> 48 -> 64 cpus and 144 -> 288 -> 432 GB, and its peak memory grew with the threads (63.9 GB on Slurm, 170.9 GB at 64 cpus). Tested on Nextflow 25.10.4 with probe processes (attempt 1 base size, after exit 137 x2, after exit 1 back to x1); a real lost host (exit `-`) is not simulated. Known gap: after a memory kill followed by a lost host the next attempt is at the base size. |
 | `SAVANA_RUN` memory | `220.GB * task.ext.retryScale` | Peak RSS 175.4 GB observed vs 72 GB from `process_high`. |
 | `SEVERUS` memory | `96.GB * task.ext.retryScale` | Peak RSS 75.4 GB observed vs 36 GB from `process_medium`. |
@@ -178,7 +178,7 @@ with no evidence are in `docs/compute-sizing.md` of the repository this folder l
 None of the following was ever exercised:
 
 - Cirro itself: registering this process, the form, the `preprocess.py` hook and the output rules were not tried.
-- AWS Batch: no run on Batch, so the assumed `resourceLimits` are untested; Batch ran a full-size P4 run once and it failed on lost Spot hosts, not on memory (see "Compute").
+- AWS Batch: a full-size P4 run (all analyses, no cache, run `6774e393`, 2026-11-20) completed in about 20 h with all 60 tasks on the on-demand queue, none retried and none near its memory request. The retry path (lost host, memory kill) has not run on Cirro, and `resourceLimits` was checked only against the instance families, not by a run (see "Compute").
 - Spot-reclaim behaviour on Cirro/AWS Batch: whether a reclaimed task reaches Nextflow as an unknown exit status
   (`Integer.MAX_VALUE`, which the retry predicate now covers), as one of the listed exit codes, or in another way, was
   not observed. `aws.batch.maxSpotAttempts` is not set.
@@ -271,5 +271,5 @@ What remains; nothing below has been done:
    - `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi`
 3. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
    `ingest_unaligned_bam`, read from the catalogue and not run; see "Process definition notes").
-4. Set `resourceLimits` in `process-compute.config` to the real AWS Batch limits.
+4. Confirm the on-demand compute environment's Max vCPUs (not visible in the screenshot); `resourceLimits` already fits the instance families.
 5. Check in the `queue` column of `artifacts/trace.txt` that every task runs on `Cirro-OnDemand-*` (the `withName: '.*'` queue block is untested in a run).
