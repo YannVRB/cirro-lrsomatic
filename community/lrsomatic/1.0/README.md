@@ -1,8 +1,10 @@
 # Somatic Variant Calling for Long Reads (LRsomatic)
 
-DRAFT. This folder is a Cirro wrapper for the long-read somatic variant calling pipeline
+This folder is a Cirro wrapper for the long-read somatic variant calling pipeline
 [IntGenomicsLab/lrsomatic](https://github.com/IntGenomicsLab/lrsomatic) (tumor/normal, ONT or PacBio, AWS Batch).
-It has never been registered in Cirro or run on AWS. Read "Not verified" before relying on it.
+It is registered in the BTC-GBM-Development project and has run end to end on AWS Batch (full-size ONT P4, all
+analyses, 2026-11-20), launched through the SDK. Nobody has used the web form yet. Read "Not verified" before relying
+on it. How to launch it from the form: `docs/how-to-launch-lrsomatic-on-cirro.md` in the repository root.
 
 ## What this is
 
