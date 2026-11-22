@@ -86,13 +86,15 @@ defaults: no process reached 75 % of its allocated time.
 ### No evidence (left at pipeline defaults)
 
 These processes never ran in the P3/P4 traces: `SIGPROFILER_MATRIXGENERATOR`,
-`SIGPROFILER_ASSIGNMENT` (signatures were skipped), `VEPPLUGIN_EVE`, `ENSEMBLVEP_DOWNLOAD`,
+`SIGPROFILER_ASSIGNMENT` (signatures were skipped; both SigProfiler steps later ran on Cirro, see below), `VEPPLUGIN_EVE`, `ENSEMBLVEP_DOWNLOAD`,
 `CLAIRSTO`, `CLAIRSTO_CNA_RESOURCES`, `CLAIRSTO_VERDICT_TAG` and `SAVANA_TO` (tumour-only paths),
 `DEEPVARIANT_*` and `DEEPSOMATIC_*`, `MODKIT_DMR`, `DMR_HAPLOTYPE_REGIONS`, `DMR_NEAREST_GENE`,
 `HTSLIB_BGZIPTABIX`, `FIBERTOOLSRS_*`, `BCFTOOLS_NORM`, `BCFTOOLS_ISEC`, `BCFTOOLS_ANNOTATE`,
 `BCFTOOLS_QUERY`, `BCFTOOLS_MERGE`, `SAMTOOLS_CAT`, `SAMTOOLS_MERGE`, `VCFSPLIT`,
 `MINIMAP2_INDEX`, `PIGZ_UNCOMPRESS`.
 `SIGPROFILER_INSTALL` ran once and failed (exit 1, not a resource problem).
+`SIGPROFILER_MATRIXGENERATOR` and `SIGPROFILER_ASSIGNMENT` ran on Cirro in run `6774e393` and completed (peak RSS
+0.46 GiB of 36 and 0.97 GiB of 12; 0.6 and 1.6 min), so the label defaults are more than enough.
 
 ### How the table was produced
 

@@ -177,15 +177,14 @@ with no evidence are in `docs/compute-sizing.md` of the repository this folder l
 
 None of the following was ever exercised:
 
-- Cirro itself: registering this process, the form, the `preprocess.py` hook and the output rules were not tried.
+- Cirro itself: registration, the parameter spec, the `preprocess.py` hook and the output rules were exercised by runs launched through the SDK (subset runs and full run `6774e393`). The web form itself has not been used by a person yet.
 - AWS Batch: a full-size P4 run (all analyses, no cache, run `6774e393`, 2026-11-20) completed in about 20 h with all 60 tasks on the on-demand queue, none retried and none near its memory request. A memory-kill retry, and a lost-host retry under the current retry scaling, have not run on Cirro, and `resourceLimits` was checked only against the instance families, not by a run (see "Compute").
 - Lost-host behaviour on Cirro/AWS Batch: observed in runs `b7730d18` and `c6012ed5` (2026-11-17/18). A lost host reaches
   Nextflow as an unknown exit status (exit `-` in the trace, covered by the retry predicate) and the retried tasks
   succeeded (4 of 4 in `c6012ed5`), but both runs predate the retry scaling. Not observed: a lost host after `e5b2099`.
   `aws.batch.maxSpotAttempts` is not set here; Cirro's own config sets it to 5.
-- The Docker image pull of `ghcr.io/ljwharbers/sigprofiler:1.3.6-chm13-7894689`: only the Singularity image was run.
 - PacBio: there is no PacBio data; `platform=pb` and mixed ONT/PacBio runs are accepted but untested.
-- `--plot` and SigProfilerAssignment in the signatures step.
+- `--plot`: the form does not expose it and it was never run. (SigProfilerAssignment in the signatures step is no longer on this list: it completed in the full run `6774e393`.)
 - The real shape of `ds.files` for BAM inputs (the `sample` and `file` columns `preprocess.py` expects), and the real
   names of the Cirro metadata columns.
 - `main()` of `preprocess.py`: the pairing logic is unit-tested, `main()` was never run against Cirro (its logging
