@@ -261,15 +261,15 @@ GitHub repository `yannvrb/lrsomatic` (the `code.uri` in `process-definition.jso
 `yannvrb/cirro-lrsomatic`. In a local clone of the fork, `origin` may still point at upstream
 IntGenomicsLab/lrsomatic; do not push there. The process was registered on 2026-11-16 in one Cirro dev project (not
 tenant-wide) with `docs/registration/register_lrsomatic.py` (dry run by default; `--create` registers and syncs). The
-sync succeeded; no launch has been tried.
+sync succeeded. Runs have been launched through the SDK (subset runs and the full-size run `6774e393`); nobody has launched it from the web form yet.
 
-What remains; nothing below has been done:
+What remains (items 1, 2 and 5 are settled and kept for the record):
 
 1. Nothing to do (checked 2026-11-21): `documentationUrl` in `process-definition.json` keeps the catalogue placeholder
    `<DOCS_SITE>` on purpose, because registration fills it in. `docs/registration/register_lrsomatic.py` sets it, and Cirro
    holds `https://github.com/YannVRB/cirro-lrsomatic/tree/main/community/lrsomatic/1.0`.
-2. Confirm the references are staged (see "Prerequisites") at the paths in `process-input.json`, or change the paths to
-   wherever they were put:
+2. Done 2026-11-20: the references are staged at the paths in `process-input.json` and Batch could read them. Run
+   `6774e393` completed VEP with REVEL and both SigProfiler steps from these paths:
    - `s3://btc-refdata/sigprofiler/volume/`
    - `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz`
    - `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi`
