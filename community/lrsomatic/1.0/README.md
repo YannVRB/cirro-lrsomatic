@@ -263,7 +263,9 @@ sync succeeded; no launch has been tried.
 
 What remains; nothing below has been done:
 
-1. Replace the `documentationUrl` anchor in `process-definition.json`; it is an invented guess.
+1. Nothing to do (checked 2026-11-21): `documentationUrl` in `process-definition.json` keeps the catalogue placeholder
+   `<DOCS_SITE>` on purpose, because registration fills it in. `docs/registration/register_lrsomatic.py` sets it, and Cirro
+   holds `https://github.com/YannVRB/cirro-lrsomatic/tree/main/community/lrsomatic/1.0`.
 2. Confirm the references are staged (see "Prerequisites") at the paths in `process-input.json`, or change the paths to
    wherever they were put:
    - `s3://btc-refdata/sigprofiler/volume/`
