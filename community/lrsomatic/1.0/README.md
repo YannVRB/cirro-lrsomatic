@@ -162,7 +162,7 @@ REVEL: the fork sends any `vep_revel` value containing `://` (so an `s3://` URI 
 | Setting | Value | Why |
 |---|---|---|
 | `errorStrategy` / `maxRetries` | pipeline predicate plus unknown exit status (retry on exit 130-145, 104, 175-177 or `Integer.MAX_VALUE`, else `finish`) / 2 | The pipeline's predicate from the fork's `conf/base.config` is kept exactly and one condition is added, `task.exitStatus == Integer.MAX_VALUE` (Nextflow's value when no exit code was recorded). A lost host on AWS Batch does surface that way instead of as a container exit code (exit `-` in the trace of run b7730d18, 2026-11-17). Real non-zero exit codes outside the list are still not rerun. `maxRetries` is raised from the pipeline's 1 to 2 (three attempts), which also bounds retries of an unknown exit status. `aws.batch.maxSpotAttempts` is not set because its behaviour on Cirro cannot be verified. Overridden memory scales with `task.ext.retryScale`, so only after a kill (see the retry scaling row): `SAVANA_RUN` 220 / 440 / 488 GB (third attempt capped by `resourceLimits`), `SEVERUS` 96 / 192 / 288 GB; after a lost host the next attempt keeps the same size. |
-| `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | Sarek's values, checked against the on-demand compute environment's instance families on 2026-11-21 (see `docs/compute-sizing.md`): the largest memory-heavy sizes (768 to 1024 GiB) can hold 64 cpus and 488 GiB. Not verified: the environment's Max vCPUs and the instance sizes for this account. |
+| `resourceLimits` | `cpus: 64, memory: 488.GB, time: 240.h` | Sarek's values, checked against the on-demand compute environment's instance families on 2026-11-21 (see `docs/compute-sizing.md`): the largest memory-heavy sizes (768 to 1024 GiB) can hold 64 cpus and 488 GiB. The project's vCPU limit is 1000 for CPU, so it does not limit a 64-cpu retry. Not verified: the instance sizes for this account. |
 | retry scaling | `ext.retryScale`: `task.attempt` if the previous attempt exited 130-145, 104 or 175-177, else 1; multiplies cpus, memory and time of the 7 labels the workflow uses | `conf/base.config` multiplies by `task.attempt` on every retry, so a lost host (exit unknown) also asked for a bigger instance: in run c6012ed5 CLAIR3 went 24 -> 48 -> 64 cpus and 144 -> 288 -> 432 GB, and its peak memory grew with the threads (63.9 GB on Slurm, 170.9 GB at 64 cpus). Tested on Nextflow 25.10.4 with probe processes (attempt 1 base size, after exit 137 x2, after exit 1 back to x1); a real lost host (exit `-`) is not simulated. Known gap: after a memory kill followed by a lost host the next attempt is at the base size. |
 | `SAVANA_RUN` memory | `220.GB * task.ext.retryScale` | Peak RSS 175.4 GB observed vs 72 GB from `process_high`. |
 | `SEVERUS` memory | `96.GB * task.ext.retryScale` | Peak RSS 75.4 GB observed vs 36 GB from `process_medium`. |
@@ -263,7 +263,7 @@ IntGenomicsLab/lrsomatic; do not push there. The process was registered on 2026-
 tenant-wide) with `docs/registration/register_lrsomatic.py` (dry run by default; `--create` registers and syncs). The
 sync succeeded. Runs have been launched through the SDK (subset runs and the full-size run `6774e393`); nobody has launched it from the web form yet.
 
-What remains (items 1, 2 and 5 are settled and kept for the record):
+What remains (items 1, 2, 4 and 5 are settled and kept for the record):
 
 1. Nothing to do (checked 2026-11-21): `documentationUrl` in `process-definition.json` keeps the catalogue placeholder
    `<DOCS_SITE>` on purpose, because registration fills it in. `docs/registration/register_lrsomatic.py` sets it, and Cirro
@@ -275,5 +275,5 @@ What remains (items 1, 2 and 5 are settled and kept for the record):
    - `s3://btc-refdata/vep_revel/revel_grch38.tsv.gz.tbi`
 3. Confirm in Cirro that a dataset uploaded as "Unaligned BAM" is offered this pipeline (`parentProcessIds` lists
    `ingest_unaligned_bam`, read from the catalogue and not run; see "Process definition notes").
-4. Confirm the on-demand compute environment's Max vCPUs (not visible in the screenshot); `resourceLimits` already fits the instance families.
+4. Done 2026-11-24: the project's vCPU limit is 1000 for CPU and 600 for GPU (adjustable per project), so `resourceLimits` is not limited by it and it fits the instance families.
 5. Done 2026-11-20: the `queue` column of `artifacts/trace.txt` of run `6774e393` shows all 60 tasks on `Cirro-OnDemand-*`, so the `withName: '.*'` queue block works. Re-check after any change to it.

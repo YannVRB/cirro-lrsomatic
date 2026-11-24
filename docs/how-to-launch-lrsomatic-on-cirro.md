@@ -57,8 +57,10 @@ because there are too few reads per window.
 
 - Full-size ONT P4 (82 GB tumor and 183 GB normal BAMs, everything on): about 20 hours.
 - chr4 subset (a few hundred MB): 12 to 19 minutes.
-- Cost: the AWS compute for the full P4 run is roughly 30 to 60 dollars by my estimate (not measured). The AWS bill
-  goes to the project, and the project has a monthly budget. Check with Yann before launching several full-size runs.
+- Cost: the full no-cache P4 run cost $75.84 of EC2 plus $2.22 of EBS on the AWS account (November 2026), so plan on
+  about $75 to $80 for a full-size run like it. Cirro's own estimate for that run was $25.12, about a third of the real
+  cost, so do not trust it for full-size runs. The AWS bill goes to the project, and the project has a monthly budget.
+  Check with Yann before launching several full-size runs.
 - Cirro reuses finished tasks from earlier runs of the same process with the same inputs and parameters. A rerun after a
   failure is therefore much faster, and a test run on the same data may complete in minutes.
 
