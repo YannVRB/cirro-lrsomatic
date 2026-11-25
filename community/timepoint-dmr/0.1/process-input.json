@@ -1,0 +1,8 @@
+{
+  "baseline_sample": "$.dataset.params.baseline_sample",
+  "extra_params_json": "$.dataset.params.extra_params_json",
+  "comparisons": "$.dataset.s3|/config/comparisons.csv",
+  "outdir": "$.dataset.dataPath",
+  "genome": "GRCh38",
+  "monochrome_logs": true
+}

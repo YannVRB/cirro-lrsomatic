@@ -1,0 +1,57 @@
+{
+  "id": "process-intgenomicslab-timepoint-dmr-dev-test",
+  "parentProcessIds": [
+    "process-intgenomicslab-lrsomatic-dev-test"
+  ],
+  "childProcessIds": [],
+  "dataType": "Genomic Variants (VCF)",
+  "name": "Timepoint DMR (lrsomatic dev, test)",
+  "desc": "TEST: differentially methylated regions of each tumor against a baseline tumor from the same patient, from lrsomatic dev results",
+  "executor": "NEXTFLOW",
+  "category": "DNA Sequencing",
+  "documentationUrl": "https://<DOCS_SITE>/pipelines/catalog-dna-sequencing/#somatic-variant-calling-for-long-reads-lrsomatic",
+  "code": {
+    "repository": "GITHUBPUBLIC",
+    "script": "timepoint_dmr.nf",
+    "uri": "yannvrb/lrsomatic",
+    "version": "0000000000000000000000000000000000000000",
+    "executorVersion": "26.04.6"
+  },
+  "allowMultipleSources": true,
+  "usesSampleSheet": false,
+  "fileMappingRules": [
+    {
+      "description": "DMR calls with the nearest gene",
+      "min": 0,
+      "fileNamePatterns": [
+        {
+          "exampleName": "sampleName_vs_baseline/dmr/sampleName_vs_baseline.nearestGene.bed",
+          "description": "DMR calls (BED)",
+          "sampleMatchingPattern": "(?P<sampleName>[^/]+)/dmr/[^/]+\\.nearestGene\\.bed$"
+        }
+      ]
+    },
+    {
+      "description": "modkit dmr log",
+      "min": 0,
+      "fileNamePatterns": [
+        {
+          "exampleName": "sampleName_vs_baseline/dmr/sampleName_vs_baseline.log",
+          "description": "modkit log",
+          "sampleMatchingPattern": "(?P<sampleName>[^/]+)/dmr/[^/]+\\.log$"
+        }
+      ]
+    }
+  ],
+  "computeDefaults": [
+    {
+      "executor": "NEXTFLOW",
+      "json": "s3://<RESOURCES_BUCKET>/<PROCESS_DIRECTORY>/process-compute.config",
+      "name": "Default"
+    }
+  ],
+  "paramMapJson": "s3://<RESOURCES_BUCKET>/<PROCESS_DIRECTORY>/process-input.json",
+  "preProcessScript": "s3://<RESOURCES_BUCKET>/<PROCESS_DIRECTORY>/preprocess.py",
+  "formJson": "s3://<RESOURCES_BUCKET>/<PROCESS_DIRECTORY>/process-form.json",
+  "webOptimizationJson": "s3://<RESOURCES_BUCKET>/<PROCESS_DIRECTORY>/process-output.json"
+}
