@@ -85,6 +85,17 @@
           "sampleMatchingPattern": "(?P<sampleName>[^/]+)/methylation/(?:tumor|normal)/dmr/[^/]+\\.nearestGene\\.bed$"
         }
       ]
+    },
+    {
+      "description": "Tumor methylation pileup (bedMethyl)",
+      "min": 0,
+      "fileNamePatterns": [
+        {
+          "exampleName": "sampleName/methylation/tumor/modkit_pileup/sampleName.bed.gz",
+          "description": "Tumor bedMethyl (whole sample, with Phased methylation pileup also the _hp1, _hp2 and _combined files)",
+          "sampleMatchingPattern": "(?P<sampleName>[^/]+)/methylation/tumor/modkit_pileup/[^/]+\\.bed\\.gz$"
+        }
+      ]
     }
   ],
   "computeDefaults": [

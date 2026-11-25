@@ -157,3 +157,16 @@ def test_compute_config_is_minimal_and_safe():
     assert re.search(r"withName:\s*'\.\*'\s*\{\s*queue\s*=\s*env\('PW_ONDEMAND_JOB_QUEUE'\)", code)
     # dev's own sizing is kept: no label or per-process size is overridden here
     assert not re.search(r"\b(cpus|memory|time)\s*=", code.replace("resourceLimits", ""))
+
+
+def test_tumor_pileup_rule_exposes_the_files_to_the_timepoint_process():
+    rules = {r["description"]: r for r in load("process-definition.json")["fileMappingRules"]}
+    pattern = rules["Tumor methylation pileup (bedMethyl)"]["fileNamePatterns"][0]
+    assert rules["Tumor methylation pileup (bedMethyl)"]["min"] == 0
+    assert pattern["exampleName"] == "sampleName/methylation/tumor/modkit_pileup/sampleName.bed.gz"
+    regex = pattern["sampleMatchingPattern"]
+    assert re.search(regex, pattern["exampleName"]).group("sampleName") == "sampleName"
+    assert not re.search(regex, "s1/methylation/normal/modkit_pileup/s1.bed.gz")
+    # the stricter whole-sample selection happens in the timepoint preprocess, not here
+    assert re.search(regex, "s1/methylation/tumor/modkit_pileup/s1_combined.bed.gz")
+    assert re.search(regex, "s1/methylation/tumor/modkit_pileup/s1_hp1.bed.gz")
