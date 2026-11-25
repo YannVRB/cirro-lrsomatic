@@ -1,0 +1,185 @@
+{
+  "ui": {
+    "extra_params_json": {
+      "ui:widget": "textarea",
+      "ui:placeholder": "{\"coral_gain\": 8.0}"
+    }
+  },
+  "form": {
+    "title": "Somatic Variant Calling for Long Reads (LRsomatic dev, test)",
+    "description": "TEST of the lrsomatic dev branch: tumor/normal long-read (ONT) analysis with ecDNA/BFB detection and haplotype methylation",
+    "type": "object",
+    "properties": {
+      "genome_selection": {
+        "title": "Reference Genome",
+        "type": "object",
+        "properties": {
+          "genome": {
+            "type": "string",
+            "title": "Reference Genome",
+            "description": "Reference genome (iGenomes). Only GRCh38 is currently supported.",
+            "enum": [
+              "GRCh38"
+            ],
+            "enumNames": [
+              "Homo sapiens (GRCh38)"
+            ],
+            "default": "GRCh38"
+          }
+        }
+      },
+      "skip_options": {
+        "title": "Skip Options",
+        "type": "object",
+        "description": "Tick a box to skip the corresponding analysis step.",
+        "properties": {
+          "skip_ascat": {
+            "type": "boolean",
+            "title": "Skip ASCAT",
+            "description": "Skip ASCAT copy-number and purity/ploidy estimation.",
+            "default": false
+          },
+          "skip_savana": {
+            "type": "boolean",
+            "title": "Skip Savana",
+            "description": "Skip Savana structural variant calling.",
+            "default": false
+          },
+          "skip_wakhan": {
+            "type": "boolean",
+            "title": "Skip Wakhan",
+            "description": "Skip Wakhan copy-number analysis.",
+            "default": false
+          },
+          "skip_vep": {
+            "type": "boolean",
+            "title": "Skip VEP",
+            "description": "Skip variant annotation with Ensembl VEP.",
+            "default": false
+          },
+          "skip_vep_plugins": {
+            "type": "boolean",
+            "title": "Skip VEP plugins",
+            "description": "Run VEP without its plugins.",
+            "default": false
+          },
+          "skip_fiber": {
+            "type": "boolean",
+            "title": "Skip Fiber-seq analysis",
+            "description": "Skip fibertools analysis.",
+            "default": false
+          },
+          "skip_normalfiber": {
+            "type": "boolean",
+            "title": "Skip Fiber-seq on normal samples",
+            "description": "Skip fibertools analysis of normal samples.",
+            "default": false
+          },
+          "skip_m6a": {
+            "type": "boolean",
+            "title": "Skip m6A calling",
+            "description": "Skip m6A calling.",
+            "default": false
+          },
+          "skip_modcall": {
+            "type": "boolean",
+            "title": "Skip modification calling",
+            "description": "Skip base modification calling.",
+            "default": false
+          },
+          "skip_qc": {
+            "type": "boolean",
+            "title": "Skip QC",
+            "description": "Skip quality control steps.",
+            "default": false
+          },
+          "skip_padfoot": {
+            "type": "boolean",
+            "title": "Skip Padfoot",
+            "description": "Skip Padfoot SV/CNA annotation.",
+            "default": false
+          },
+          "skip_reconplot": {
+            "type": "boolean",
+            "title": "Skip ReConPlot",
+            "description": "Skip ReConPlot SV/CNA figures.",
+            "default": false
+          },
+          "skip_shatterseek": {
+            "type": "boolean",
+            "title": "Skip ShatterSeek",
+            "description": "Skip ShatterSeek chromothripsis calling.",
+            "default": false
+          }
+        }
+      },
+      "annotation": {
+        "title": "Annotation",
+        "type": "object",
+        "properties": {
+          "vep_cache_version": {
+            "type": "integer",
+            "title": "VEP cache version",
+            "description": "Version of the VEP cache to use. Must be a GRCh38 version available in the public annotation-cache bucket.",
+            "default": 113
+          }
+        }
+      },
+      "signatures": {
+        "title": "Mutational Signatures",
+        "type": "object",
+        "properties": {
+          "skip_signatures": {
+            "type": "boolean",
+            "title": "Skip mutational signatures",
+            "description": "Skip mutational signature analysis (SigProfilerMatrixGenerator and SigProfilerAssignment). Leave unticked to run it.",
+            "default": false
+          }
+        }
+      },
+      "ecdna": {
+        "title": "ecDNA and BFB",
+        "type": "object",
+        "properties": {
+          "skip_coral": {
+            "type": "boolean",
+            "title": "Skip CoRAL and AmpliconClassifier",
+            "description": "Skip ecDNA amplicon reconstruction (CoRAL) and its classification. CoRAL needs ASCAT, so do not tick Skip ASCAT without ticking this.",
+            "default": false
+          },
+          "skip_ampliconclassifier": {
+            "type": "boolean",
+            "title": "Skip AmpliconClassifier only",
+            "description": "Run CoRAL but skip the classifier, which is the step that calls ecDNA and BFB (BFBArchitect runs inside it). The classifier downloads the AmpliconArchitect GRCh38 data repository during the run.",
+            "default": false
+          }
+        }
+      },
+      "methylation": {
+        "title": "Haplotype methylation",
+        "type": "object",
+        "properties": {
+          "modkit_phased": {
+            "type": "boolean",
+            "title": "Phased methylation pileup",
+            "description": "Run modkit on the haplotagged BAMs and write haplotype 1, haplotype 2 and combined bedMethyl files. Needed for DMR calling.",
+            "default": false
+          },
+          "skip_dmr": {
+            "type": "boolean",
+            "title": "Skip DMR calling",
+            "description": "Skip haplotype differential methylation region calling. Only has an effect when Phased methylation pileup is ticked.",
+            "default": false
+          }
+        }
+      },
+      "extra_params_json": {
+        "type": "string",
+        "title": "Extra Parameters (JSON)",
+        "description": "Optional: provide additional workflow parameters as a JSON object (e.g. {\"skip_dmr\": true}). These override the form values, except input, outdir, igenomes_base, vep_cache, sigprofiler_genome_dir, vep_revel, vep_revel_tbi, monochrome_logs, custom_config_base, custom_config_version, validate_params, igenomes_ignore, genome (use the Reference Genome field), download_vep_cache and download_sigprofiler_genome, which are rejected. Maximum 10000 characters.",
+        "maxLength": 10000,
+        "default": ""
+      }
+    }
+  }
+}
