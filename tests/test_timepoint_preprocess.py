@@ -103,3 +103,42 @@ def test_relative_paths_work(pre):
     result = pre.build_comparisons(frame(rel("S1"), rel("S4")), "S1")
     assert result["comparison"].tolist() == ["S4_vs_S1"]
     assert result["control_bed"].tolist() == [rel("S1")]
+
+
+def test_extra_params_blank_is_empty(pre):
+    assert pre.extra_params("") == {}
+    assert pre.extra_params(None) == {}
+    assert pre.extra_params('{"coral_gain": 8.0}') == {"coral_gain": 8.0}
+
+
+@pytest.mark.parametrize("key", sorted(["comparisons", "outdir", "igenomes_base", "monochrome_logs", "custom_config_base",
+                                         "custom_config_version", "validate_params", "igenomes_ignore", "genome"]))
+def test_extra_params_rejects_protected_key(pre, key):
+    assert key in pre._PROTECTED_PARAMS
+    with pytest.raises(ValueError, match="extra_params_json") as err:
+        pre.extra_params(f'{{"{key}": "x"}}')
+    assert key in str(err.value)
+
+
+def test_protected_set_is_exactly_the_planned_nine(pre):
+    assert pre._PROTECTED_PARAMS == frozenset({
+        "comparisons", "outdir", "igenomes_base", "monochrome_logs", "custom_config_base",
+        "custom_config_version", "validate_params", "igenomes_ignore", "genome"})
+
+
+@pytest.mark.parametrize("raw", ["{not json", "[1, 2]", '"text"'])
+def test_extra_params_rejects_bad_json_and_non_objects(pre, raw):
+    with pytest.raises(ValueError, match="extra_params_json"):
+        pre.extra_params(raw)
+
+
+def test_extra_params_length_limit(pre):
+    ok = '{"a": "' + "x" * (10000 - len('{"a": ""}')) + '"}'
+    assert len(ok) == 10000 and pre.extra_params(ok)["a"]
+    with pytest.raises(ValueError, match="10000"):
+        pre.extra_params('{"a": "' + "x" * (10000 - len('{"a": ""}') + 1) + '"}')
+
+
+def test_main_exists_and_cirro_is_not_imported_at_module_level(pre):
+    assert callable(pre.main)
+    assert not hasattr(pre, "PreprocessDataset")

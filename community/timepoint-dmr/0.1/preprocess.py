@@ -8,6 +8,7 @@ baseline is compared with the baseline (treatment = that sample, control = basel
 `cirro` is imported only inside main() so that the pure functions can be tested without Cirro installed.
 """
 
+import json
 import re
 
 import pandas as pd
@@ -84,3 +85,59 @@ def build_comparisons(files: pd.DataFrame, baseline: str) -> pd.DataFrame:
         for sample in others
     ]
     return pd.DataFrame(rows, columns=COMPARISON_COLUMNS)
+
+
+# Params that extra_params_json must never override: the comparison table and output location set by
+# process-input.json, the fixed genome, the remote config include, validation and iGenomes switches.
+_PROTECTED_PARAMS = frozenset({
+    "comparisons", "outdir", "igenomes_base", "monochrome_logs",
+    "custom_config_base", "custom_config_version", "validate_params", "igenomes_ignore", "genome",
+})
+# The form's maxLength is client-side only, so it is enforced here too.
+_MAX_EXTRA_PARAMS_CHARS = 10_000
+
+
+def extra_params(raw: object) -> dict[str, object]:
+    """Parse the extra_params_json textarea: a JSON object string -> dict, blank -> {}."""
+    text = _text(raw)
+    if not text:
+        return {}
+    if len(text) > _MAX_EXTRA_PARAMS_CHARS:
+        raise ValueError(
+            f"extra_params_json is {len(text)} characters, over the {_MAX_EXTRA_PARAMS_CHARS}-character limit"
+        )
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"extra_params_json is not valid JSON: {exc}") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError(f"extra_params_json must be a JSON object, got {type(parsed).__name__}")
+    protected = sorted(_PROTECTED_PARAMS & parsed.keys())
+    if protected:
+        raise ValueError(f"extra_params_json cannot set protected parameter(s): {', '.join(protected)}")
+    return parsed
+
+
+def main() -> None:
+    from cirro.helpers.preprocess_dataset import PreprocessDataset
+
+    ds = PreprocessDataset.from_running()
+    comparisons = build_comparisons(ds.files, ds.params.get("baseline_sample"))
+    _, ignored = tumor_pileups(ds.files)
+    skipped = [p for p in ignored if _text(p).endswith(".bed.gz")]
+    if skipped:
+        ds.logger.info(f"Ignored {len(skipped)} bedMethyl file(s) that are not whole-sample tumor pileups: {skipped}")
+    ds.logger.info(f"Comparisons: {comparisons.shape[0]}\n{comparisons.to_csv(index=False)}")
+    # Must go to the path mapped in process-input.json (an S3 URI), not the working directory
+    comparisons.to_csv(ds.params["comparisons"], index=None)
+
+    # User-supplied extra params override earlier values (as in the 1.0 process)
+    for key, value in extra_params(ds.params.get("extra_params_json")).items():
+        ds.add_param(key, value, overwrite=True)
+    # Cirro-only fields, never Nextflow parameters
+    ds.remove_param("baseline_sample", force=True)
+    ds.remove_param("extra_params_json", force=True)
+
+
+if __name__ == "__main__":
+    main()
