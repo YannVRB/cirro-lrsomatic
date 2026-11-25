@@ -159,6 +159,12 @@ def test_compute_config_is_minimal_and_safe():
     assert not re.search(r"\b(cpus|memory|time)\s*=", code.replace("resourceLimits", ""))
 
 
+def test_compute_config_turns_copy_attributes_off():
+    # dev sets workflow.output.copyAttributes = true; nf-amazon 3.9.2 rejects COPY_ATTRIBUTES on S3 to S3 copies
+    # (run b94197a1: "options are not supported: [COPY_ATTRIBUTES]"), so Cirro's config must override it
+    assert re.findall(r"^\s*workflow\.output\.copyAttributes\s*=\s*(\w+)", _config_code(), flags=re.M) == ["false"]
+
+
 def test_tumor_pileup_rule_exposes_the_files_to_the_timepoint_process():
     rules = {r["description"]: r for r in load("process-definition.json")["fileMappingRules"]}
     pattern = rules["Tumor methylation pileup (bedMethyl)"]["fileNamePatterns"][0]
