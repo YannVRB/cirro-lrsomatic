@@ -1,6 +1,6 @@
 # Timepoint DMR on Cirro — design
 
-Date: 2026-11-25. Status: draft for approval, nothing built.
+Date: 2026-11-25. Status: built locally (config repo and fork branch `timepoint-dmr`); not pushed, registered or run on Cirro.
 
 ## Intent and why
 

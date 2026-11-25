@@ -45,5 +45,24 @@ python -u docs/registration/register_lrsomatic.py --project PROJECT_ID --folder 
 python -u docs/registration/register_lrsomatic.py --project PROJECT_ID --folder community/timepoint-dmr/0.1 --create   # register and sync
 ```
 
-The pinned fork commit must be pushed to `YannVRB/lrsomatic` and these files to the `main` branch of
-`YannVRB/cirro-lrsomatic` first; the sync reads them from GitHub.
+The sync reads both from GitHub, so push first (the user runs these; a hook blocks pushing from Claude):
+
+```
+git -C /net/bmc-lab3/data/bcc/yannvrb/GBM_TeamLab/Cirro_LRsomatic/lrsomatic-fork push yannvrb timepoint-dmr
+git push origin master:main        # in this repository
+```
+
+`community/lrsomatic-dev/0.1` (the parent process) must be registered, and its pinned fork branch `cirro-dev` pushed
+(`git push yannvrb cirro-dev` in the fork), before this one.
+
+## Tests
+
+- Config repo: `python -m pytest tests -q` (preprocess logic, process folder, output rules).
+- Fork, `modules/local/dmr/check_modifications/tests/check_modifications.test.sh`: plain bash, four pileup cases.
+- Fork, `subworkflows/local/timepoint_dmr/tests/main.nf.test`: three nf-tests that run the real chain on the public
+  nanopore BAM (containers), on a compute node (never the login node), with Nextflow 26.04.6, Java 21,
+  Singularity 3.10.4 and **nf-test 0.9.5** (0.9.0 generates `MODULE(*input)`, which Nextflow 26's parser rejects). The
+  runner used was `Cirro_LRsomatic/run_nftest.sh <test> --profile test,singularity` under
+  `srun -p bcc -n 1 -c 2 --mem 16G`.
+- `nextflow run . -main-script timepoint_dmr.nf -profile singularity -stub-run --comparisons <csv> --outdir <dir>` runs the
+  entry script; stubs write empty region files, so it ends with "no CpG island is covered" and no results.
