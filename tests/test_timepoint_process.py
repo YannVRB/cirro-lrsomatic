@@ -117,3 +117,11 @@ def test_compute_config_matches_dev_test_process():
 def test_preprocess_loads_and_exposes_the_contract():
     assert preprocess_module().COMPARISON_COLUMNS == [
         "comparison", "treatment_name", "treatment_bed", "control_name", "control_bed"]
+
+
+def test_source_run_requirements_name_both_options():
+    # dev adds 5hmC only when Phased methylation pileup is ticked AND Skip DMR calling is not
+    form = load("process-form.json")["form"]["description"]
+    readme = (TP / "README.md").read_text()
+    for text in (form, readme):
+        assert "Phased methylation pileup" in text and "Skip DMR" in text

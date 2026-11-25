@@ -14,7 +14,7 @@
     "repository": "GITHUBPUBLIC",
     "script": "timepoint_dmr.nf",
     "uri": "yannvrb/lrsomatic",
-    "version": "6a9a01302c00a07bcfad9b8761228a3447334ee1",
+    "version": "8eb822669d309dbd7861ed69a1fb4eb49006d4fe",
     "executorVersion": "26.04.6"
   },
   "allowMultipleSources": true,

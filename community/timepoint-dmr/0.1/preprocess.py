@@ -59,7 +59,7 @@ def build_comparisons(files: pd.DataFrame, baseline: str) -> pd.DataFrame:
     if not pileups:
         problems.append(
             "no tumor methylation pileup files in the input; the datasets are probably not lrsomatic-dev "
-            "results, or were run without 'Phased methylation pileup'"
+            "results, or were run with the modkit pileup step skipped"
         )
     for sample, paths in sorted(pileups.items()):
         if len(paths) > 1:

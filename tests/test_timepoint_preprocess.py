@@ -84,8 +84,10 @@ def test_missing_baseline_blank_baseline_no_files_no_other_sample(pre):
         pre.build_comparisons(frame(pile("S1"), pile("S4")), "S9")
     with pytest.raises(ValueError, match="blank"):
         pre.build_comparisons(frame(pile("S1"), pile("S4")), "  ")
-    with pytest.raises(ValueError, match=r"no .*pileup"):
+    with pytest.raises(ValueError, match=r"no .*pileup") as err:
         pre.build_comparisons(frame("s3://b/ds1/data/S1/variants/x.vcf.gz"), "S1")
+    # an unphased run also has a pileup, so the hint must not blame the phased option
+    assert "skipped" in str(err.value) and "Phased methylation pileup" not in str(err.value)
     with pytest.raises(ValueError, match="no other tumor"):
         pre.build_comparisons(frame(pile("S1")), "S1")
 

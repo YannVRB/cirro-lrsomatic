@@ -22,7 +22,7 @@ Status: **prepared, not registered, not run.** Nothing here has been tested on C
 
 ## What must be true of the source runs
 
-- Launched with **Phased methylation pileup** ticked (or `--modkit_args` including 5hmC). `modkit dmr pair` rejects
+- Launched with **Phased methylation pileup** ticked and **Skip DMR calling** not ticked (or with `--modkit_args` including 5hmC): lrsomatic adds 5hmC to the pileup only then. `modkit dmr pair` rejects
   rows with other modifications, and SUP basecalls also call 5hmC. The pipeline stops with a clear message otherwise.
 - Launched with the lrsomatic-dev test process. 1.0 runs only request 5mC.
 - The samples belong to the same patient. **This is not checked**: the registered `patient` metadata is linked to the
@@ -65,4 +65,4 @@ git push origin master:main        # in this repository
   runner used was `Cirro_LRsomatic/run_nftest.sh <test> --profile test,singularity` under
   `srun -p bcc -n 1 -c 2 --mem 16G`.
 - `nextflow run . -main-script timepoint_dmr.nf -profile singularity -stub-run --comparisons <csv> --outdir <dir>` runs the
-  entry script; stubs write empty region files, so it ends with "no CpG island is covered" and no results.
+  entry script; stubs write empty region files, so it ends with the error "no CpG island is covered in both samples of <comparison>" (by design) after the check, indexing and regions steps ran.

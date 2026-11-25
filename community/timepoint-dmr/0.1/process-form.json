@@ -7,7 +7,7 @@
   },
   "form": {
     "title": "Timepoint DMR (lrsomatic dev, test)",
-    "description": "TEST: compares every other tumor sample in the selected lrsomatic dev result datasets with the baseline sample (for example S4 vs S1 and S6 vs S1). The source runs must have been launched with Phased methylation pileup ticked.",
+    "description": "TEST: compares every other tumor sample in the selected lrsomatic dev result datasets with the baseline sample (for example S4 vs S1 and S6 vs S1). The source runs must have been launched with Phased methylation pileup ticked and Skip DMR calling not ticked (lrsomatic adds 5hmC to the pileup only then).",
     "type": "object",
     "required": [
       "baseline_sample"
