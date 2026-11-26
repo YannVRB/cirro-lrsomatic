@@ -165,6 +165,17 @@ def test_compute_config_turns_copy_attributes_off():
     assert re.findall(r"^\s*workflow\.output\.copyAttributes\s*=\s*(\w+)", _config_code(), flags=re.M) == ["false"]
 
 
+def test_compute_config_drops_clair3_records_with_a_bad_ref():
+    # run 6a568a0c: Clair3 wrote 31 records with N in REF (chr3:16902879 TGTGN); bcftools norm exits on the first
+    # mismatch by default. Same selector string as dev's conf/modules.config so this config (loaded last) replaces ext.args;
+    # dev's own options stay.
+    code = _config_code()
+    match = re.search(r"withName:\s*'(\.\*:PHASING_HAPLOTYPING:REJOIN_GERMLINE)'\s*\{\s*ext\.args\s*=\s*\{\s*'([^']*)'\s*\}", code)
+    assert match, "no REJOIN_GERMLINE ext.args override"
+    args = match.group(2).split()
+    assert args == ["-m", "+any", "--output-type", "z", "--write-index=tbi", "--check-ref", "x"]
+
+
 def test_tumor_pileup_rule_exposes_the_files_to_the_timepoint_process():
     rules = {r["description"]: r for r in load("process-definition.json")["fileMappingRules"]}
     pattern = rules["Tumor methylation pileup (bedMethyl)"]["fileNamePatterns"][0]
