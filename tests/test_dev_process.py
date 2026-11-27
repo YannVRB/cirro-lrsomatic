@@ -187,3 +187,9 @@ def test_tumor_pileup_rule_exposes_the_files_to_the_timepoint_process():
     # the stricter whole-sample selection happens in the timepoint preprocess, not here
     assert re.search(regex, "s1/methylation/tumor/modkit_pileup/s1_combined.bed.gz")
     assert re.search(regex, "s1/methylation/tumor/modkit_pileup/s1_hp1.bed.gz")
+
+
+def test_compute_config_turns_docker_on_so_the_container_gated_steps_run():
+    # dev gates Padfoot, ReConPlot and ShatterSeek on workflow.containerEngine != null, which is null on Cirro unless a
+    # container engine is enabled (run edb1f3f9 skipped all three); AWS Batch runs every task in its container either way
+    assert re.findall(r"^\s*docker\.enabled\s*=\s*(\w+)", _config_code(), flags=re.M) == ["true"]
