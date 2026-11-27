@@ -122,8 +122,11 @@ def main() -> None:
     from cirro.helpers.preprocess_dataset import PreprocessDataset
 
     ds = PreprocessDataset.from_running()
-    comparisons = build_comparisons(ds.files, ds.params.get("baseline_sample"))
-    _, ignored = tumor_pileups(ds.files)
+    # ds.files only holds files attached to a registered sample and lacked the pileups (run 537920f0);
+    # input_files() lists every file of the input datasets
+    files = ds.input_files()
+    comparisons = build_comparisons(files, ds.params.get("baseline_sample"))
+    _, ignored = tumor_pileups(files)
     skipped = [p for p in ignored if _text(p).endswith(".bed.gz")]
     if skipped:
         ds.logger.info(f"Ignored {len(skipped)} bedMethyl file(s) that are not whole-sample tumor pileups: {skipped}")

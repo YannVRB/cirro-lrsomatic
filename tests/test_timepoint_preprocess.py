@@ -144,3 +144,36 @@ def test_extra_params_length_limit(pre):
 def test_main_exists_and_cirro_is_not_imported_at_module_level(pre):
     assert callable(pre.main)
     assert not hasattr(pre, "PreprocessDataset")
+
+
+def test_main_reads_the_pileups_from_all_input_files_not_the_sample_files_table(pre, monkeypatch, tmp_path):
+    # run 537920f0: ds.files (files attached to a registered sample) had no pileup although the input dataset does;
+    # ds.input_files() lists every file of the input datasets
+    import logging
+    import sys
+    import types
+
+    class FakeDataset:
+        files = pd.DataFrame({"file": []})
+        params = {"baseline_sample": "S1", "comparisons": str(tmp_path / "comparisons.csv"), "extra_params_json": ""}
+        logger = logging.getLogger("fake")
+
+        def input_files(self):
+            return pd.DataFrame({"file": [pile("S1"), pile("S4"), pile("S1", kind="normal")],
+                                 "dataset": "ds1", "process": "process-intgenomicslab-lrsomatic-dev-test"})
+
+        def add_param(self, *args, **kwargs):
+            pass
+
+        def remove_param(self, *args, **kwargs):
+            pass
+
+    module = types.ModuleType("cirro.helpers.preprocess_dataset")
+    module.PreprocessDataset = types.SimpleNamespace(from_running=lambda: FakeDataset())
+    for name in ("cirro", "cirro.helpers"):
+        monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
+    monkeypatch.setitem(sys.modules, "cirro.helpers.preprocess_dataset", module)
+    pre.main()
+    written = pd.read_csv(tmp_path / "comparisons.csv")
+    assert written["comparison"].tolist() == ["S4_vs_S1"]
+    assert written["treatment_bed"].tolist() == [pile("S4")]
