@@ -155,8 +155,18 @@ def test_compute_config_is_minimal_and_safe():
     assert len(strategy) == 1 and "task.exitStatus" in strategy[0] and "Integer.MAX_VALUE" in strategy[0]
     assert re.findall(r"maxRetries\s*=\s*(\d+)", code) == ["2"]
     assert re.search(r"withName:\s*'\.\*'\s*\{\s*queue\s*=\s*env\('PW_ONDEMAND_JOB_QUEUE'\)", code)
-    # dev's own sizing is kept: no label or per-process size is overridden here
-    assert not re.search(r"\b(cpus|memory|time)\s*=", code.replace("resourceLimits", ""))
+    # dev's own sizing is kept: the only size set here is CORAL_RECONSTRUCT's memory (next test)
+    sizes = re.findall(r"\b(cpus|memory|time)\s*=", code.replace("resourceLimits", ""))
+    assert sizes == ["memory"]
+
+
+def test_compute_config_gives_coral_reconstruct_more_memory_than_its_label():
+    # Run 9e99c928 (S6): CORAL_RECONSTRUCT was killed (exit 137) at 36, 72 and 108 GB; on S1 it peaked at 7 GB.
+    # The size scales with the attempt and stays under the 488 GB resourceLimits cap on every attempt.
+    code = _config_code()
+    match = re.search(r"withName:\s*'(\.\*:CORAL_RECONSTRUCT)'\s*\{\s*memory\s*=\s*\{\s*(\d+)\.GB\s*\*\s*task\.attempt\s*\}", code)
+    assert match, "no CORAL_RECONSTRUCT memory override"
+    assert 108 < int(match.group(2)) and int(match.group(2)) * 3 <= 488
 
 
 def test_compute_config_turns_copy_attributes_off():
